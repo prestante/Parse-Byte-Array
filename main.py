@@ -4,7 +4,7 @@ import time
 from prettytable import PrettyTable
 
 time0 = time.time()  # timestamp
-filepath = r'C:\Lists\List12500 PL Clear.lst'
+filepath = r'List12500 PL Clear.lst'
 length = path.getsize(filepath)
 table = PrettyTable()
 table.field_names = [
