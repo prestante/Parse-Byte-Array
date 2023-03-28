@@ -32,16 +32,23 @@ table.field_names = [
 ]
 '''
 event = 1
+dataFlag = 0
 with open(filepath, 'rb') as f:
     header = f.read(64)
-    while event <= 1:
+    while event <= 5:
         row = []
         row.append(event)
 
         EventType = 2
         value = f.read(EventType)
-        #print(value.hex(' ').upper(), ' --  EventType')
-        row.append('plug')
+        if not value[0]:  # Primary
+            row.append('')
+        else:  # Secondary
+            if value[1] != 1:  # Secondary with no buffer
+                row.append(value.hex(' ').upper())
+            else:  # Secondary with buffer
+                row.append(value.hex(' ').upper())
+                dataFlag = 1
 
         fKey = 8
         value = f.read(fKey)
@@ -131,10 +138,51 @@ with open(filepath, 'rb') as f:
         fClosedCaptionToFieldsToSource = 26
         value = f.read(fClosedCaptionToFieldsToSource)
 
+        Reserved50 = 50
+        value = f.read(Reserved50)
+        #print(value.hex(' ').upper())
 
+        OrigTime = 4
+        value = f.read(OrigTime)
 
+        OrigDate = 2
+        value = f.read(OrigDate)
 
+        fevttype = 1
+        value = f.read(fevttype)
 
+        fetriggeredlists = 2
+        value = f.read(fetriggeredlists)
+
+        port = 2
+        value = f.read(port)
+
+        feventchanged = 1
+        value = f.read(feventchanged)
+
+        fbookmark = 1
+        value = f.read(fbookmark)
+
+        feventtrigger = 1
+        value = f.read(feventtrigger)
+
+        resBufferSize = ord(f.read(1)) + ord(f.read(1)) * 256
+        resBuffer = f.read(resBufferSize)
+
+        ratingSize = ord(f.read(1)) + ord(f.read(1)) * 256
+        rating = f.read(ratingSize)
+
+        showIDsize = ord(f.read(1)) + ord(f.read(1)) * 256
+        showID = f.read(showIDsize)
+
+        showDescrSize = ord(f.read(1)) + ord(f.read(1)) * 256
+        showDescr = f.read(showDescrSize)
+
+        if dataFlag:
+            dataBufferSize = ord(f.read(1)) + ord(f.read(1)) * 256
+            dataBuffer = f.read(dataBufferSize)
+            dataFlag = 0
+            print('DATAFLAG')
 
         table.add_row(row)
         event = event + 1
