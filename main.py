@@ -1,11 +1,13 @@
-import datetime
-from os import path
-import time
+from referenceTables import refType, refTypeBuffer, refEventControl, refExtEventControl
 from prettytable import PrettyTable
+import datetime
+import time
+
+eventsToShow = 7
 
 time0 = time.time()  # timestamp
-filepath = r'List12500 PL Clear.lst'
-length = path.getsize(filepath)
+filepath = r'C:\PY\Parse-Byte-Array\List12500 PL Clear.lst'
+#filepath = r'C:\PY\Parse-Byte-Array\SwitchOnlyTest.lst'
 table = PrettyTable()
 table.field_names = [
     "No",
@@ -35,19 +37,22 @@ event = 1
 dataFlag = 0
 with open(filepath, 'rb') as f:
     header = f.read(64)
-    while event <= 5:
+    while event <= 12500:
         row = []
         row.append(event)
 
         EventType = 2
         value = f.read(EventType)
+        if value == b'':
+            break
+        #print(value)
         if not value[0]:  # Primary
             row.append('')
         else:  # Secondary
             if value[1] != 1:  # Secondary with no buffer
-                row.append(value.hex(' ').upper())
+                row.append(refType[value[0]])
             else:  # Secondary with buffer
-                row.append(value.hex(' ').upper())
+                row.append(refTypeBuffer[0])
                 dataFlag = 1
 
         fKey = 8
@@ -57,7 +62,7 @@ with open(filepath, 'rb') as f:
         freconcilekey = 32
         value = f.read(freconcilekey)
         #print(value.hex(' ').upper(), ' --  Reconcile')
-        row.append(value.decode('ASCII').strip())
+        row.append(value.decode('1250').strip())
 
         Effects = 3
         value = f.read(Effects)
@@ -71,12 +76,12 @@ with open(filepath, 'rb') as f:
         feid = 32
         value = f.read(feid)
         #print(value.hex(' ').upper(), ' --  ID')
-        row.append(value.decode('ASCII').strip())
+        row.append(value.decode('1250').strip())
 
         fetitle = 32
         value = f.read(fetitle)
         #print(value.hex(' ').upper(), ' --  Title')
-        row.append(value.decode('ASCII').strip())
+        row.append(value.decode('1250').strip())
 
         Som = 4
         value = f.read(Som)
@@ -103,7 +108,7 @@ with open(filepath, 'rb') as f:
 
         fdatetoair = 2
         value = f.read(fdatetoair)
-        row.append(datetime.date.fromordinal(693596+int.from_bytes(value)))
+        row.append(datetime.date.fromordinal(693596+int.from_bytes(value)).__format__('%m/%d/%Y'))
 
         feventcontrol = 2
         value = f.read(feventcontrol)
@@ -189,4 +194,20 @@ with open(filepath, 'rb') as f:
 
 time1 = time.time()
 print((time1 - time0).__round__(3), 's')  # it was ~1.4 seconds when just pos++ for 8750064 bytes (~9 MB)
-print(table)
+#print(table)
+#print(table.get_string(fields=["No", "OnAirDate", "OnAirTime", "Sec", "Type"]))
+'''
+table.field_names = [
+    "No",
+    "ID",
+    "Title",
+    "Sec",
+    "Reconcile",
+    "OnAirTime",
+    "SOM",
+    "DUR",
+    "Seg",
+    "DateToAir",
+]
+'''
+print(table.get_string(end=eventsToShow))
